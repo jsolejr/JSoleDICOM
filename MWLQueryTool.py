@@ -11,12 +11,13 @@ debug_logger()
 root = Tk()
 root.withdraw()  # Hide the main window
 
-ae_title = simpledialog.askstring("Input", "Enter AE Title:")
+calling_ae_title = simpledialog.askstring("Input", "Enter Calling AE Title:")
+ae_title = simpledialog.askstring("Input", "Enter Destination AE Title:")
 ip_address = simpledialog.askstring("Input", "Enter PACS Server IP:")
 port = simpledialog.askinteger("Input", "Enter PACS Server Port:")
 
 # Initialize the Application Entity (AE)
-ae = AE(ae_title=ae_title)
+ae = AE(ae_title=calling_ae_title)
 ae.add_requested_context(ModalityWorklistInformationFind)
 
 # Create the query dataset
@@ -70,8 +71,8 @@ def handle_find(event):
 handlers = [(evt.EVT_C_FIND, handle_find)]
 
 # Set up the remote PACS server information
-assoc = ae.associate(ip_address, port, ext_neg=[build_role(
-    ModalityWorklistInformationFind)], evt_handlers=handlers)
+assoc = ae.associate(ip_address, port, ae_title=ae_title, ext_neg=[
+                     build_role(ModalityWorklistInformationFind)], evt_handlers=handlers)
 
 if assoc.is_established:
     # Send the C-FIND request
@@ -83,4 +84,3 @@ else:
     error_msg = f"Failed to establish association with remote PACS server: {ip_address}:{port}"
     print(error_msg)
     messagebox.showerror("Error", error_msg)
-    sys.exit(1)
