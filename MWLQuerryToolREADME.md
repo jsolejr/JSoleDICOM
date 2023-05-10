@@ -19,7 +19,7 @@ This script allows you to query a DICOM Modality Worklist (MWL) from a PACS serv
 
 1. Ensure you have Python 3.6+ installed and the required dependencies.
 2. Run the script using `python MWLQueryTool.py`.
-3. Enter the calling AE title, destination AE title, PACS server IP address, and port number in the dialog boxes that appear.
+3. Enter the calling AE title, called AE title, PACS server IP address, and port number in the dialog boxes that appear.
 4. Choose whether you'd like to provide query information. If yes, enter the desired query parameters in the custom dialog box.
 5. The script will send the C-FIND request to the PACS server, display the pending responses, and write them to an output file (output.txt).
 
