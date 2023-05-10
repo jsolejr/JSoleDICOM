@@ -19,7 +19,7 @@ This repository contains a collection of Python-based DICOM tools to perform var
 
 ## Tools
 
-1. **DICOM Modality Worklist Query Tool (MWLQueryTool.py):** Query a DICOM Modality Worklist (MWL) from a PACS server using the C-FIND operation.
+1. **[DICOM Modality Worklist Query Tool (MWLQueryTool.py)](MWLQueryToolREADME.md):** Query a DICOM Modality Worklist (MWL) from a PACS server using the C-FIND operation.
 2. _More tools will be added in the future._
 
 ## Usage
