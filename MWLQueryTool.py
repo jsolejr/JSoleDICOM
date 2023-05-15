@@ -1,7 +1,7 @@
 from pynetdicom import AE
 from pynetdicom.sop_class import ModalityWorklistInformationFind
 import tkinter as tk
-from tkinter import messagebox, simpledialog, Text, Scrollbar, Toplevel
+from tkinter import messagebox, simpledialog, Text, Scrollbar, Toplevel, filedialog
 import os
 from pydicom.dataset import Dataset
 
@@ -93,6 +93,20 @@ text_area['yscrollcommand'] = scrollbar.set
 # Insert the results into the text area
 for result in results:
     text_area.insert("end", str(result) + "\n")
+
+# Define a function to save the results to a file
+def save_results():
+    file_path = filedialog.asksaveasfilename(defaultextension=".txt")
+    if file_path:
+        with open(file_path, 'w') as file:
+            for result in results:
+                file.write(str(result) + "\n")
+        messagebox.showinfo("Save Results", "Results saved successfully.")
+
+# Create a "Save Results" button
+save_button = tk.Button(results_window, text="Save Results", command=save_results)
+save_button.pack()        
+
 
 # Define a close function to destroy both the result and root windows
 def close_all():
