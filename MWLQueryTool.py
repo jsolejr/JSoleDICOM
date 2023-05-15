@@ -1,9 +1,27 @@
 from pynetdicom import AE
 from pynetdicom.sop_class import ModalityWorklistInformationFind
 import tkinter as tk
-from tkinter import messagebox, simpledialog, Text, Scrollbar, Toplevel
+from tkinter import messagebox, simpledialog, Text, Scrollbar, Toplevel, filedialog
 import os
 from pydicom.dataset import Dataset
+import logging
+from pynetdicom import debug_logger
+import csv
+
+# Activate pynetdicom logging
+debug_logger()
+
+# Create a log file handler
+handler = logging.FileHandler('dmwl_query.log')
+
+# Get the logger used by pynetdicom (its name is 'pynetdicom')
+logger = logging.getLogger('pynetdicom')
+
+# Set the level of the logger and add the file handler
+logger.setLevel(logging.DEBUG)
+logger.addHandler(handler)
+
+
 
 # Create a simple GUI to prompt the user for inputs
 root = tk.Tk()
@@ -12,48 +30,55 @@ root.withdraw()  # Hide the main window
 # Custom Dialog Class for user inputs
 class InputDialog(simpledialog.Dialog):
     def body(self, master):
-        tk.Label(master, text="Calling AE:").grid(row=0)
-        tk.Label(master, text="Called AE:").grid(row=1)
-        tk.Label(master, text="Remote IP:").grid(row=2)
-        tk.Label(master, text="Remote Port:").grid(row=3)
-        tk.Label(master, text="Patient Name:").grid(row=4)
-        tk.Label(master, text="Study Date:").grid(row=5)
-        tk.Label(master, text="Modality:").grid(row=6)
-        tk.Label(master, text="Patient ID:").grid(row=7)
+        labels = ["Calling AE:", "Called AE:", "Remote IP:", "Remote Port:", "Accession Number:",
+                   "Patient Name:", "Patient ID:", "Modality:", "Scheduled Procedure Step Start Date:", 
+                   "Scheduled Procedure Step Start Time:", "Scheduled Procedure Step Description:"]
+        self.entries = []
 
-        self.e1 = tk.Entry(master)
-        self.e2 = tk.Entry(master)
-        self.e3 = tk.Entry(master)
-        self.e4 = tk.Entry(master)
-        self.e5 = tk.Entry(master)
-        self.e6 = tk.Entry(master)
-        self.e7 = tk.Entry(master)
-        self.e8 = tk.Entry(master)
+        for i, label in enumerate(labels):
+            tk.Label(master, text=label).grid(row=i)
+            entry = tk.Entry(master)
+            entry.grid(row=i, column=1)
+            self.entries.append(entry)
 
-        self.e1.grid(row=0, column=1)
-        self.e2.grid(row=1, column=1)
-        self.e3.grid(row=2, column=1)
-        self.e4.grid(row=3, column=1)
-        self.e5.grid(row=4, column=1)
-        self.e6.grid(row=5, column=1)
-        self.e7.grid(row=6, column=1)
-        self.e8.grid(row=7, column=1)
-
-        return self.e1  # initial focus
+        return self.entries[0]  # initial focus
 
     def apply(self):
-        self.result = (self.e1.get(), self.e2.get(), self.e3.get(), self.e4.get(), self.e5.get(), self.e6.get(), self.e7.get(), self.e8.get())
+        self.result = tuple(entry.get() for entry in self.entries)
+
 
 # Use dialog box to get user inputs
 d = InputDialog(root)
-calling_ae, called_ae, remote_ip, remote_port, patient_name, study_date, modality, patient_id = d.result
+(
+    calling_ae, 
+    called_ae, 
+    remote_ip, 
+    remote_port, 
+    accession_number, 
+    patient_name, 
+    patient_id, 
+    modality, 
+    sps_start_date, 
+    sps_start_time, 
+    sps_description
+) = d.result
 
 # Create a dataset representing a worklist
 dataset = Dataset()
 dataset.PatientName = patient_name
-dataset.StudyDate = study_date
-dataset.Modality = modality
+dataset.AccessionNumber = accession_number
 dataset.PatientID = patient_id
+
+# Create a dataset for the ScheduledProcedureStepSequence
+scheduled_procedure_step_sequence = Dataset()
+scheduled_procedure_step_sequence.Modality = modality
+scheduled_procedure_step_sequence.ScheduledProcedureStepStartDate = sps_start_date
+scheduled_procedure_step_sequence.ScheduledProcedureStepStartTime = sps_start_time
+scheduled_procedure_step_sequence.ScheduledProcedureStepDescription = sps_description
+
+# Add the ScheduledProcedureStepSequence to the main dataset
+dataset.ScheduledProcedureStepSequence = [scheduled_procedure_step_sequence]
+
 
 # Initialize the Application Entity and specify the SOP class
 ae = AE(ae_title=calling_ae)
@@ -65,19 +90,29 @@ assoc = ae.associate(remote_ip, int(remote_port), ae_title=called_ae)
 # Save the results in a list
 results = []
 
+
 # Send the C-FIND request
 if assoc.is_established:
-    responses = assoc.send_c_find(dataset, ModalityWorklistInformationFind)
+    try:
+        responses = assoc.send_c_find(
+            dataset=dataset,  # Specify the dataset parameter with the query dataset
+            query_model=ModalityWorklistInformationFind
+        )
 
-    # Iterate over the responses
-    for (status, identifier) in responses:
-        if status:
-            print("C-FIND response received with status", status)
-            # Save the result
-            results.append(identifier)
+        # Iterate over the responses
+        for (status, identifier) in responses:
+            if status:
+                print("C-FIND response received with status", status)
+                # Save the result
+                if identifier is not None:  # Check if identifier is not None
+                    results.append(identifier)
 
-    # Release the association
-    assoc.release()
+        # Release the association
+        assoc.release()
+    except:
+        print("Exception occurred during handling of responses")
+        assoc.abort()
+
 
 # Create a new window to display the results
 results_window = Toplevel(root)
@@ -90,9 +125,54 @@ scrollbar = Scrollbar(results_window, command=text_area.yview)
 scrollbar.pack(side="right", fill="y")
 text_area['yscrollcommand'] = scrollbar.set
 
-# Insert the results into the text area
+# Format and insert the results into the text area to include a running count
+count = 0  # Initialize the result count
 for result in results:
-    text_area.insert("end", str(result) + "\n")
+    count += 1  # Increment the result count
+    text_area.insert("end", f"----- Result {count} -----\n")
+
+    # Access ScheduledProcedureStepSequence with fallback to "N/A" if not present
+    if result is not None:  # Check if result is not None
+        scheduled_procedure_step_seq = result.get("ScheduledProcedureStepSequence", "N/A")  
+        
+        if scheduled_procedure_step_seq != "N/A":
+            for scheduled_procedure_step in scheduled_procedure_step_seq:
+                start_date = scheduled_procedure_step.get("ScheduledProcedureStepStartDate", "N/A")
+                start_time = scheduled_procedure_step.get("ScheduledProcedureStepStartTime", "N/A")
+                description = scheduled_procedure_step.get("ScheduledProcedureStepDescription", "N/A")
+                text_area.insert("end", f"ScheduledProcedureStepStartDate: {start_date}\n")
+                text_area.insert("end", f"ScheduledProcedureStepStartTime: {start_time}\n")
+                text_area.insert("end", f"ScheduledProcedureStepDescription: {description}\n")
+
+        for tag, value in result.items():
+            if tag == "00080060" or tag == "00400100":  # Skip Modality and ScheduledProcedureStepSequence attribute
+                continue
+            text_area.insert("end", f"{tag}: {value}\n")
+
+    text_area.insert("end", "\n")
+
+# Define a function to save the results to a file
+def save_results():
+    file_path = filedialog.asksaveasfilename(defaultextension=".csv")
+    if file_path:
+        with open(file_path, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Result", "Specific Character Set", "Accession Number", "Patient's Name", "Patient ID", "Modality", "Scheduled Procedure Step Start Date", "Scheduled Procedure Step Start Time", "Scheduled Procedure Step Description"])
+            for i, result in enumerate(results):
+                sps_sequence = result.get("ScheduledProcedureStepSequence", "N/A")
+                if sps_sequence != "N/A":
+                    for sps in sps_sequence:
+                        modality = sps.get("Modality", "N/A")
+                        start_date = sps.get("ScheduledProcedureStepStartDate", "N/A")
+                        start_time = sps.get("ScheduledProcedureStepStartTime", "N/A")
+                        description = sps.get("ScheduledProcedureStepDescription", "N/A")
+                        writer.writerow([i+1, result.get("SpecificCharacterSet", "N/A"), result.get("AccessionNumber", "N/A"), result.get("PatientName", "N/A"), result.get("PatientID", "N/A"), modality, start_date, start_time, description])
+        messagebox.showinfo("Save Results", "Results saved successfully.")
+
+# Create a "Save Results" button
+save_button = tk.Button(results_window, text="Save Results", command=save_results)
+save_button.pack()        
+
 
 # Define a close function to destroy both the result and root windows
 def close_all():
