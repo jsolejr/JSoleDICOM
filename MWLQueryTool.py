@@ -90,9 +90,18 @@ scrollbar = Scrollbar(results_window, command=text_area.yview)
 scrollbar.pack(side="right", fill="y")
 text_area['yscrollcommand'] = scrollbar.set
 
-# Insert the results into the text area
+# Format and insert the results into the text area to include a running count
+count = 0  # Initialize the result count
 for result in results:
-    text_area.insert("end", str(result) + "\n")
+    if result is None:
+        continue  # Skip None results
+    count += 1  # Increment the result count
+    text_area.insert("end", f"----- Result {count} -----\n")
+    for elem in result:
+        name = elem.name
+        value = elem.value
+        text_area.insert("end", f"{name}: {value}\n")
+    text_area.insert("end", "\n")
 
 # Define a function to save the results to a file
 def save_results():
@@ -100,7 +109,12 @@ def save_results():
     if file_path:
         with open(file_path, 'w') as file:
             for result in results:
-                file.write(str(result) + "\n")
+                file.write("----- Result -----\n")
+                for elem in result:
+                    name = elem.name
+                    value = elem.value
+                    file.write(f"{name}: {value}\n")
+                file.write("\n")
         messagebox.showinfo("Save Results", "Results saved successfully.")
 
 # Create a "Save Results" button
