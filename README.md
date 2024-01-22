@@ -9,6 +9,7 @@ This repository contains a collection of Python-based DICOM tools to perform var
 - ❓ Parse and display DICOM image headers and metadata. - TBD
 - ❓ Modify DICOM image headers and save them to new files. -TBD
 - ❓ Perform image processing and analysis on DICOM images. -TBD
+- ❓ Perform a discovery on a PACS. - In Progress
 
 ## 📦 Requirements
 
