@@ -29,7 +29,7 @@ start_date = datetime(2014, 1, 1)
 # Define the end date as the current date and time
 end_date = datetime.now()
 
-# Open a CSV file to write the results
+# Open a CSV file to write the results.  Currently this will only record exams that return with no Study Description, which was a specific use case for the last use case.
 with open('dicom_query_results.csv', 'w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(['Accession Number', 'Study Date', 'Study Time', 'Patient ID', 'Study UID', 'Study Description'])
@@ -60,7 +60,7 @@ with open('dicom_query_results.csv', 'w', newline='') as file:
                 for (status, identifier) in responses:
                     if status and status.Status in (0xFF00, 0xFF01) and identifier:
                         # Check if StudyDescription is empty
-                        if identifier.get('StudyDescription', '') == '':
+                        if identifier.get('StudyDescription', '') == '':  # Currently this will only record exams that return with no Study Description, which was a specific use case for the last use case.
                             # Write the data to the CSV file
                             writer.writerow([
                                 identifier.AccessionNumber or '',
