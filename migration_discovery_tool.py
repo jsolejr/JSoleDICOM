@@ -12,16 +12,16 @@ logger = logging.getLogger('pynetdicom')
 logger.setLevel(logging.INFO)
 
 # Define the Calling and Called AE Titles
-calling_aet = 'SeibertWork'
-called_aet = 'DICOM_QRP'
+calling_aet = 'calling_ae'
+called_aet = 'called_ae'
 
 # Initialise the Application Entity with the Calling AE Title
 ae = AE(ae_title=calling_aet)
 ae.requested_contexts = QueryRetrievePresentationContexts
 
 # Replace with the correct PACS details
-pacs_host = '152.79.9.53'
-pacs_port = 107
+pacs_host = 'IP/Hostname'
+pacs_port = PORT
 
 # Define the start date as January 1st, 2014
 start_date = datetime(2014, 1, 1)
