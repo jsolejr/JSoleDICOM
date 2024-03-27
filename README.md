@@ -25,7 +25,7 @@ For detailed usage, see [Simple Study Count README](SimpleStudyCountREADME.md).
 
 ## 🛠️ Tools
 
-1. **[🔎 DICOM Modality Worklist Query Tool (MWLQueryTool.py)](MWLQueryToolREADME.md):** Query a DICOM Modality Worklist (MWL) from a PACS server using the C-FIND operation.
+1. **[🔎 DICOM Modality Worklist Query Tool (MWLQueryTool.py)](MWLQuerryToolREADME.md):** Query a DICOM Modality Worklist (MWL) from a PACS server using the C-FIND operation.
 2. **[📊 Simple Study Count (SimpleStudyCount.py)](SimpleStudyCountREADME.md):** Perform a simple query to retrieve study accession numbers and corresponding Study Instance UIDs from a PACS server, logging the results to a CSV file.
 3. 📝 _More tools will be added in the future._
 
