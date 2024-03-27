@@ -4,13 +4,13 @@ from tkinter import messagebox
 import subprocess
 import os
 import logging
-from pynetdicom import AE, VerificationPresentationContexts, debug_logger
-
-# Uncomment the following line if you wish to enable logging for pynetdicom
-# debug_logger()
+from pynetdicom import AE, evt, VerificationPresentationContexts
 
 # Configure logging for the script
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Uncomment the following line if you wish to enable detailed logging for pynetdicom
+# debug_logger()
 
 def load_config():
     config = {
@@ -61,25 +61,27 @@ def ping(host):
         return f"Ping failed: {e}"
 
 def dicom_echo(aet, host, port):
-    ae = AE(aetitle=aet)
-    ae.supported_contexts = VerificationPresentationContexts
+    # Initialise the Application Entity with the specified AE Title
+    ae = AE(ae_title=aet)
+    
+    # Add a requested presentation context
+    ae.add_requested_context(VerificationPresentationContexts)
 
-    try:
-        assoc = ae.associate(host, int(port))
-        if assoc.is_established:
-            status = assoc.send_c_echo()
-            assoc.release()
-            if status:
-                if status.Status in range(0x0000, 0x0100):
-                    return "DICOM Echo Succeeded"
-                else:
-                    return f"DICOM Echo Failed with status: {status.Status}"
-            else:
-                return "DICOM Echo Failed: No response received"
+    # Associate with a peer AE at IP address and port
+    assoc = ae.associate(host, int(port))
+
+    if assoc.is_established:
+        # Use the C-ECHO service
+        status = assoc.send_c_echo()
+
+        # Release the association
+        assoc.release()
+        if status:
+            return f"DICOM Echo succeeded with status: 0x{status.Status:04X}"
         else:
-            return "DICOM Echo Failed: Association not established"
-    except Exception as e:
-        return f"DICOM Echo Failed: {e}"
+            return "DICOM Echo failed: no response received"
+    else:
+        return "DICOM Echo failed: Association not established"
 
 def test_source_pacs():
     messagebox.showinfo("Running Tests", "The tests are now running. Please wait...")
