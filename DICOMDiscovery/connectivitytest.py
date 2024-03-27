@@ -3,13 +3,14 @@ import tkinter as tk
 from tkinter import messagebox
 import subprocess
 import os
-from pynetdicom import AE
-from pynetdicom.sop_class import VerificationSOPClass
+import logging
+from pynetdicom import AE, evt, VerificationSOPClass
 
 # Configure logging for the script
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Uncomment the following line if you wish to enable detailed logging for pynetdicom
+# from pynetdicom import debug_logger
 # debug_logger()
 
 def load_config():
@@ -61,23 +62,14 @@ def ping(host):
         return f"Ping failed: {e}"
 
 def dicom_echo(aet, host, port):
-    # Initialize the Application Entity with the specified AE Title
     ae = AE(ae_title=aet)
-    
-    # Add the Verification SOP Class Presentation Context
     ae.add_requested_context(VerificationSOPClass)
 
-    # Attempt to associate with a peer AE at IP address and port
     assoc = ae.associate(host, int(port))
-
     if assoc.is_established:
-        # Send a C-ECHO request and wait for a response
         status = assoc.send_c_echo()
-
-        # Release the association
         assoc.release()
         if status:
-            # Check the status
             if status.Status == 0x0000:
                 return "DICOM Echo Succeeded"
             else:
