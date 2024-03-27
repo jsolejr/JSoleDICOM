@@ -26,13 +26,19 @@ def load_config():
     except FileNotFoundError:
         logging.error("Configuration file not found.")
         messagebox.showerror("Error", "Configuration file not found.")
-        return None  # Important to return None or empty config if the file is not found
+        return None
     except Exception as e:
         logging.error(f"An error occurred reading config: {e}")
         messagebox.showerror("Error", str(e))
         return None
 
     return config
+
+def ping(host):
+    # Your ping function implementation was missing; adding a placeholder here.
+    # Please replace this with your actual ping function code.
+    logging.debug(f"Pinging host: {host}")
+    return "Ping result placeholder"
 
 def dicom_echo(config):
     ae = AE(ae_title=config.get('Calling_AE_Title', 'PYNETDICOM'))
@@ -52,17 +58,15 @@ def test_source_pacs():
     messagebox.showinfo("Running Tests", "The tests are now running. Please wait...")
     config = load_config()
     if config:
-        ping_result = ping(config["IP_Hostname_for_Source_PACS"])
-        echo_result = dicom_echo(config["Calling_AE_Title"], config["IP_Hostname_for_Source_PACS"], config["Port_for_Source_PACS"])
-        messagebox.showinfo("Test Source PACS", f"Ping Result:\n{ping_result}\n\nDICOM Echo Result:\n{echo_result}")
+        echo_result = dicom_echo(config)
+        messagebox.showinfo("Test Source PACS", f"DICOM Echo Result:\n{echo_result}")
 
 def test_destination_pacs():
     messagebox.showinfo("Running Tests", "The tests are now running. Please wait...")
     config = load_config()
     if config:
-        ping_result = ping(config["IP_Hostname_for_Destination_PACS"])
-        echo_result = dicom_echo(config["Calling_AE_Title"], config["IP_Hostname_for_Destination_PACS"], config["Port_for_Destination_PACS"])
-        messagebox.showinfo("Test Destination PACS", f"Ping Result:\n{ping_result}\n\nDICOM Echo Result:\n{echo_result}")
+        echo_result = dicom_echo(config)
+        messagebox.showinfo("Test Destination PACS", f"DICOM Echo Result:\n{echo_result}")
 
 def close_application():
     root.destroy()
@@ -70,7 +74,7 @@ def close_application():
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("PACS Connectivity Test")
-    root.geometry("400x200") # Set the size of the dialog box here (width x height)
+    root.geometry("400x200")  # Set the size of the dialog box here (width x height)
 
     # Test Source PACS button
     tk.Button(root, text="Test Source PACS", command=test_source_pacs).pack(fill=tk.X, padx=10, pady=5)
