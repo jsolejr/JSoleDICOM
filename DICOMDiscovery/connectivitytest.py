@@ -4,11 +4,14 @@ from tkinter import messagebox
 import subprocess
 import os
 import logging
+from pynetdicom import AE, VerificationPresentationContexts, debug_logger
 
-# Configure logging
+# Uncomment the following line if you wish to enable logging for pynetdicom
+# debug_logger()
+
+# Configure logging for the script
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Function to load configuration from the config.txt file
 def load_config():
     config = {
         'Calling_AE_Title': '',
@@ -20,19 +23,17 @@ def load_config():
         'Port_for_Destination_PACS': ''
     }
     
-    script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of the script
-    config_path = os.path.join(script_dir, 'config.txt')  # Path to the config file
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, 'config.txt')
 
     try:
         with open(config_path, "r") as file:
             for line in file:
-                # Remove any leading/trailing whitespace and newline characters
                 line = line.strip()
-                if line:  # Skip empty lines
+                if line:
                     parts = line.split("=", 1)
                     if len(parts) == 2:
                         key, value = parts
-                        # Replace slashes with underscores for consistency with the script's config dictionary
                         key = key.replace('/', '_').strip()
                         config[key] = value.strip()
                         logging.debug(f"Loaded {key}: {value}")
@@ -45,39 +46,41 @@ def load_config():
 
     return config
 
-# Function to perform a ping test
 def ping(host):
     count_flag = '-n' if os.name == 'nt' else '-c'
     count = '4'
     try:
         logging.debug(f"Executing ping on host: {host}")
         response = subprocess.run(["ping", count_flag, count, host], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        logging.info(f"Ping response: {response.stdout}")  # Use INFO level for successful response
+        logging.info(f"Ping response: {response.stdout}")
         if response.stderr:
-            logging.error(f"Ping error: {response.stderr}")  # Only log as ERROR if there is an actual error message
+            logging.error(f"Ping error: {response.stderr}")
         return response.stdout + "\n" + response.stderr
     except subprocess.CalledProcessError as e:
         logging.error(f"Ping failed: {e}")
         return f"Ping failed: {e}"
 
-# Function to perform a DICOM Echo (C-ECHO) test using the echoscu command from DCMTK tools
 def dicom_echo(aet, host, port):
-    # Construct the path to echoscu executable relative to this script's directory
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    echoscu_path = os.path.join(script_dir, 'DCMTK', 'echoscu')
-    if os.name == 'nt':
-        echoscu_path += '.exe'
+    ae = AE(aetitle=aet)
+    ae.supported_contexts = VerificationPresentationContexts
 
     try:
-        echo_response = subprocess.run([echoscu_path, "-aec", aet, host, port], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if echo_response.returncode == 0:
-            return "DICOM Echo Succeeded"
+        assoc = ae.associate(host, int(port))
+        if assoc.is_established:
+            status = assoc.send_c_echo()
+            assoc.release()
+            if status:
+                if status.Status in range(0x0000, 0x0100):
+                    return "DICOM Echo Succeeded"
+                else:
+                    return f"DICOM Echo Failed with status: {status.Status}"
+            else:
+                return "DICOM Echo Failed: No response received"
         else:
-            return f"DICOM Echo Failed: {echo_response.stderr}"
-    except FileNotFoundError:
-        return f"echoscu command not found at {echoscu_path}. Please check the path to DCMTK."
+            return "DICOM Echo Failed: Association not established"
+    except Exception as e:
+        return f"DICOM Echo Failed: {e}"
 
-# Function to test source PACS
 def test_source_pacs():
     messagebox.showinfo("Running Tests", "The tests are now running. Please wait...")
     config = load_config()
@@ -86,7 +89,6 @@ def test_source_pacs():
         echo_result = dicom_echo(config["Calling_AE_Title"], config["IP_Hostname_for_Source_PACS"], config["Port_for_Source_PACS"])
         messagebox.showinfo("Test Source PACS", f"Ping Result:\n{ping_result}\n\nDICOM Echo Result:\n{echo_result}")
 
-# Function to test destination PACS
 def test_destination_pacs():
     messagebox.showinfo("Running Tests", "The tests are now running. Please wait...")
     config = load_config()
@@ -94,7 +96,6 @@ def test_destination_pacs():
         ping_result = ping(config["IP_Hostname_for_Destination_PACS"])
         echo_result = dicom_echo(config["Calling_AE_Title"], config["IP_Hostname_for_Destination_PACS"], config["Port_for_Destination_PACS"])
         messagebox.showinfo("Test Destination PACS", f"Ping Result:\n{ping_result}\n\nDICOM Echo Result:\n{echo_result}")
-
 
 def close_application():
     root.destroy()
