@@ -105,6 +105,7 @@ def close_application():
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("PACS Connectivity Test")
+    root.geometry("400x200")  # Set the size of the dialog box here (width x height)
 
     # Test Source PACS button
     tk.Button(root, text="Test Source PACS", command=test_source_pacs).pack(fill=tk.X, padx=10, pady=5)
