@@ -3,8 +3,8 @@ import tkinter as tk
 from tkinter import messagebox
 import subprocess
 import os
-import logging
-from pynetdicom import AE, evt, VerificationPresentationContexts
+from pynetdicom import AE
+from pynetdicom.sop_class import VerificationSOPClass
 
 # Configure logging for the script
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -61,27 +61,27 @@ def ping(host):
         return f"Ping failed: {e}"
 
 def dicom_echo(aet, host, port):
-    # Initialise the Application Entity with the specified AE Title
+    # Initialize the Application Entity with the specified AE Title
     ae = AE(ae_title=aet)
     
-    # Add a requested presentation context
+    # Add the Verification SOP Class Presentation Context
     ae.add_requested_context(VerificationSOPClass)
 
-    # Associate with a peer AE at IP address and port
+    # Attempt to associate with a peer AE at IP address and port
     assoc = ae.associate(host, int(port))
 
     if assoc.is_established:
-        # Use the C-ECHO service
+        # Send a C-ECHO request and wait for a response
         status = assoc.send_c_echo()
 
         # Release the association
         assoc.release()
         if status:
-            # Check if the status is 'Success'
+            # Check the status
             if status.Status == 0x0000:
                 return "DICOM Echo Succeeded"
             else:
-                return f"DICOM Echo Failed with status: 0x{status.Status:04X}"
+                return f"DICOM Echo Failed with status: {status.Status}"
         else:
             return "DICOM Echo Failed: No response received"
     else:
