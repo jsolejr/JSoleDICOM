@@ -4,83 +4,47 @@ from tkinter import messagebox
 import subprocess
 import os
 import logging
-from pynetdicom import AE, evt
+from pynetdicom import AE
 from pynetdicom.sop_class import VerificationSOPClass
 import sys
 
-# Print the path of the current Python interpreter
 print(sys.executable)
 
 # Configure logging for the script
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Uncomment the following line if you wish to enable detailed logging for pynetdicom
-# from pynetdicom import debug_logger
-# debug_logger()
-
 def load_config():
-    config = {
-        'Calling_AE_Title': '',
-        'Called_AE_Title_for_Source_PACS': '',
-        'IP_Hostname_for_Source_PACS': '',
-        'Port_for_Source_PACS': '',
-        'Called_AE_Title_for_Destination_PACS': '',
-        'IP_Hostname_for_Destination_PACS': '',
-        'Port_for_Destination_PACS': ''
-    }
-    
+    config = {}
     script_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(script_dir, 'config.txt')
 
     try:
         with open(config_path, "r") as file:
             for line in file:
-                line = line.strip()
-                if line:
-                    parts = line.split("=", 1)
-                    if len(parts) == 2:
-                        key, value = parts
-                        key = key.replace('/', '_').strip()
-                        config[key] = value.strip()
-                        logging.debug(f"Loaded {key}: {value}")
+                key, value = line.strip().split('=', 1)
+                config[key.strip()] = value.strip()
     except FileNotFoundError:
         logging.error("Configuration file not found.")
         messagebox.showerror("Error", "Configuration file not found.")
+        return None  # Important to return None or empty config if the file is not found
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logging.error(f"An error occurred reading config: {e}")
         messagebox.showerror("Error", str(e))
+        return None
 
     return config
 
-def ping(host):
-    count_flag = '-n' if os.name == 'nt' else '-c'
-    count = '4'
-    try:
-        logging.debug(f"Executing ping on host: {host}")
-        response = subprocess.run(["ping", count_flag, count, host], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        logging.info(f"Ping response: {response.stdout}")
-        if response.stderr:
-            logging.error(f"Ping error: {response.stderr}")
-        return response.stdout + "\n" + response.stderr
-    except subprocess.CalledProcessError as e:
-        logging.error(f"Ping failed: {e}")
-        return f"Ping failed: {e}"
-
-def dicom_echo(aet, host, port):
-    ae = AE()
+def dicom_echo(config):
+    ae = AE(ae_title=config.get('Calling_AE_Title', 'PYNETDICOM'))
     ae.add_requested_context(VerificationSOPClass)
 
-    assoc = ae.associate(host, int(port))
+    assoc = ae.associate(config.get('IP_Hostname_for_Source_PACS', ''),
+                         int(config.get('Port_for_Source_PACS', '0')),
+                         ae_title=config.get('Called_AE_Title_for_Source_PACS', 'ANY-SCP'))
     if assoc.is_established:
         status = assoc.send_c_echo()
         assoc.release()
-        if status:
-            if status.Status == 0x0000:
-                return "DICOM Echo Succeeded"
-            else:
-                return f"DICOM Echo Failed with status: {status.Status}"
-        else:
-            return "DICOM Echo Failed: No response received"
+        return "DICOM Echo Succeeded" if status and status.Status == 0x0000 else "DICOM Echo Failed"
     else:
         return "DICOM Echo Failed: Association not established"
 
