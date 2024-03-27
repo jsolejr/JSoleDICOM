@@ -6,6 +6,8 @@ import os
 import logging
 from pynetdicom import AE, evt
 from pydicom.uid import VerificationSOPClassUID
+from pynetdicom import AE
+from pynetdicom.sop_class import VerificationSOPClass
 import sys
 print(sys.executable)
 
@@ -67,7 +69,7 @@ def ping(host):
 
 def dicom_echo(aet, host, port):
     ae = AE()
-    ae.add_requested_context(VerificationSOPClassUID)
+    ae.add_requested_context(VerificationSOPClass)
 
     assoc = ae.associate(host, int(port))
     if assoc.is_established:
