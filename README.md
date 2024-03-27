@@ -5,6 +5,11 @@ This repository contains a collection of Python-based DICOM tools to perform var
 ## 🚀 Features
 
 - ✅ Query DICOM Modality Worklist (MWL) from a PACS server using C-FIND operation. - In Progress
+- ### ✅ Simple Study Count (`SimpleStudyCount.py`)
+
+This tool performs a simple DICOM query to retrieve study accession numbers and their corresponding Study Instance UIDs from a PACS server. The results are logged into a CSV file, providing a straightforward way to compile a list of studies within a specified date range.
+
+For detailed usage, see [Simple Study Count README](SimpleStudyCountREADME.md).
 - ❓ Transfer DICOM images to and from PACS servers using C-STORE and C-GET/C-MOVE operations. - TBD
 - ❓ Parse and display DICOM image headers and metadata. - TBD
 - ❓ Modify DICOM image headers and save them to new files. -TBD
