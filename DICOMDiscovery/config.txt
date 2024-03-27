@@ -1,0 +1,7 @@
+Calling_AE_Title=VerifyAE
+Called_AE_Title_for_Source_PACS=DICOOGLE-STORAGE
+IP/Hostname_for_Source_PACS=localhost
+Port_for_Source_PACS=1045
+Called_AE_Title_for_Destination_PACS=DestCalledAE
+IP/Hostname_for_Destination_PACS=127.0.0.1
+Port_for_Destination_PACS=104
