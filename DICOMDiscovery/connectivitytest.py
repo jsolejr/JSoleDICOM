@@ -4,7 +4,11 @@ from tkinter import messagebox
 import subprocess
 import os
 import logging
-from pynetdicom import AE, evt, VerificationSOPClass
+from pynetdicom import AE, evt
+from pydicom.uid import VerificationSOPClassUID
+import sys
+print(sys.executable)
+
 
 # Configure logging for the script
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -62,8 +66,8 @@ def ping(host):
         return f"Ping failed: {e}"
 
 def dicom_echo(aet, host, port):
-    ae = AE(ae_title=aet)
-    ae.add_requested_context(VerificationSOPClass)
+    ae = AE()
+    ae.add_requested_context(VerificationSOPClassUID)
 
     assoc = ae.associate(host, int(port))
     if assoc.is_established:
