@@ -19,19 +19,18 @@ def load_config():
         'Port_for_Destination_PACS': ''
     }
     
-    # Log default config values
-    for key in config:
-        logging.debug(f"Default {key}: {config[key]}")
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of the script
+    config_path = os.path.join(script_dir, 'config.txt')  # Path to the config file
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(script_dir, 'config.txt')
     try:
         with open(config_path, "r") as file:
             for line in file:
                 parts = line.strip().split("=", 1)
                 if len(parts) == 2:
                     key, value = parts
-                    config[key] = value
+                    # Replace slash with underscore for consistency with the script's config dictionary
+                    key = key.replace('/', '_')
+                    config[key.strip()] = value.strip()
                     logging.debug(f"Loaded {key}: {value}")
     except FileNotFoundError:
         logging.error("Configuration file not found.")
@@ -41,6 +40,7 @@ def load_config():
         messagebox.showerror("Error", str(e))
 
     return config
+
 
 # Function to perform a ping test
 def ping(host):
