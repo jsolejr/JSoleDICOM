@@ -65,7 +65,7 @@ def dicom_echo(aet, host, port):
     ae = AE(ae_title=aet)
     
     # Add a requested presentation context
-    ae.add_requested_context(VerificationPresentationContexts)
+    ae.add_requested_context(VerificationSOPClass)
 
     # Associate with a peer AE at IP address and port
     assoc = ae.associate(host, int(port))
@@ -77,11 +77,15 @@ def dicom_echo(aet, host, port):
         # Release the association
         assoc.release()
         if status:
-            return f"DICOM Echo succeeded with status: 0x{status.Status:04X}"
+            # Check if the status is 'Success'
+            if status.Status == 0x0000:
+                return "DICOM Echo Succeeded"
+            else:
+                return f"DICOM Echo Failed with status: 0x{status.Status:04X}"
         else:
-            return "DICOM Echo failed: no response received"
+            return "DICOM Echo Failed: No response received"
     else:
-        return "DICOM Echo failed: Association not established"
+        return "DICOM Echo Failed: Association not established"
 
 def test_source_pacs():
     messagebox.showinfo("Running Tests", "The tests are now running. Please wait...")
