@@ -33,7 +33,6 @@ def dicom_echo(aet, host, port):
         return f"echoscu command not found at {echoscu_path}. Please check the path to DCMTK."
 
 
-
 # Function to load configuration from the config.txt file
 def load_config():
     config = {
@@ -46,7 +45,7 @@ def load_config():
         'Port_for_Destination_PACS': ''
         # Add default values for other expected configuration keys if needed.
     }
-    
+
     script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of the script
     config_path = os.path.join(script_dir, 'config.txt')  # Path to the config file
 
@@ -89,7 +88,7 @@ def close_application():
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("PACS Connectivity Test")
-    
+
     # Test Source PACS button
     tk.Button(root, text="Test Source PACS", command=test_source_pacs).pack(fill=tk.X, padx=10, pady=5)
 
