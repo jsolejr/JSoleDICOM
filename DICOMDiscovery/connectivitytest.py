@@ -45,9 +45,10 @@ def load_config():
         'Port_for_Destination_PACS': ''
         # Add default values for other expected configuration keys if needed.
     }
+    
+    # Print default config values (this should be indented to be part of the load_config function but not part of the for loop)
     for key, value in config.items():
-    print(f"{key}: {value}")
-
+        print(f"{key}: {value}")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of the script
     config_path = os.path.join(script_dir, 'config.txt')  # Path to the config file
