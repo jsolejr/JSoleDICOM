@@ -8,6 +8,7 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Function to load configuration from the config.txt file
 def load_config():
     config = {
         'Calling_AE_Title': '',
@@ -25,13 +26,16 @@ def load_config():
     try:
         with open(config_path, "r") as file:
             for line in file:
-                parts = line.strip().split("=", 1)
-                if len(parts) == 2:
-                    key, value = parts
-                    # Replace slash with underscore for consistency with the script's config dictionary
-                    key = key.replace('/', '_')
-                    config[key.strip()] = value.strip()
-                    logging.debug(f"Loaded {key}: {value}")
+                # Remove any leading/trailing whitespace and newline characters
+                line = line.strip()
+                if line:  # Skip empty lines
+                    parts = line.split("=", 1)
+                    if len(parts) == 2:
+                        key, value = parts
+                        # Replace slashes with underscores for consistency with the script's config dictionary
+                        key = key.replace('/', '_').strip()
+                        config[key] = value.strip()
+                        logging.debug(f"Loaded {key}: {value}")
     except FileNotFoundError:
         logging.error("Configuration file not found.")
         messagebox.showerror("Error", "Configuration file not found.")
@@ -41,7 +45,6 @@ def load_config():
 
     return config
 
-
 # Function to perform a ping test
 def ping(host):
     count_flag = '-n' if os.name == 'nt' else '-c'
@@ -49,13 +52,13 @@ def ping(host):
     try:
         logging.debug(f"Executing ping on host: {host}")
         response = subprocess.run(["ping", count_flag, count, host], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        logging.debug(f"Ping response: {response.stdout}")
-        logging.error(f"Ping error: {response.stderr}")
+        logging.info(f"Ping response: {response.stdout}")  # Use INFO level for successful response
+        if response.stderr:
+            logging.error(f"Ping error: {response.stderr}")  # Only log as ERROR if there is an actual error message
         return response.stdout + "\n" + response.stderr
     except subprocess.CalledProcessError as e:
         logging.error(f"Ping failed: {e}")
         return f"Ping failed: {e}"
-
 
 # Function to perform a DICOM Echo (C-ECHO) test using the echoscu command from DCMTK tools
 def dicom_echo(aet, host, port):
@@ -73,41 +76,6 @@ def dicom_echo(aet, host, port):
             return f"DICOM Echo Failed: {echo_response.stderr}"
     except FileNotFoundError:
         return f"echoscu command not found at {echoscu_path}. Please check the path to DCMTK."
-
-
-# Function to load configuration from the config.txt file
-def load_config():
-    config = {
-        'Calling_AE_Title': '',
-        'Called_AE_Title_for_Source_PACS': '',
-        'IP_Hostname_for_Source_PACS': '',
-        'Port_for_Source_PACS': '',
-        'Called_AE_Title_for_Destination_PACS': '',
-        'IP_Hostname_for_Destination_PACS': '',
-        'Port_for_Destination_PACS': ''
-        # Add default values for other expected configuration keys if needed.
-    }
-    
-    # Print default config values (this should be indented to be part of the load_config function but not part of the for loop)
-    for key, value in config.items():
-        print(f"{key}: {value}")
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of the script
-    config_path = os.path.join(script_dir, 'config.txt')  # Path to the config file
-
-    try:
-        with open(config_path, "r") as file:
-            for line in file:
-                parts = line.strip().split("=", 1)
-                if len(parts) == 2:
-                    key, value = parts
-                    config[key] = value
-    except FileNotFoundError:
-        messagebox.showerror("Error", "Configuration file not found.")
-    except Exception as e:
-        messagebox.showerror("Error", str(e))
-
-    return config
 
 # Function to test source PACS
 def test_source_pacs():
