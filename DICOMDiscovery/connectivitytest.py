@@ -35,10 +35,21 @@ def load_config():
     return config
 
 def ping(host):
-    # Your ping function implementation was missing; adding a placeholder here.
-    # Please replace this with your actual ping function code.
-    logging.debug(f"Pinging host: {host}")
-    return "Ping result placeholder"
+    # Use '-n' instead of '-c' for Windows systems (use -c on unix systems)
+    count_flag = '-n' if os.name == 'nt' else '-c'
+    count = '4'
+    logging.debug(f"Pinging host: {host}")  # Moved up for better logic flow
+    
+    try:
+        response = subprocess.run(["ping", count_flag, count, host], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        # Combine stdout and stderr for comprehensive output
+        ping_result = response.stdout + "\n" + response.stderr
+        logging.info(f"Ping result for {host}:\n{ping_result}")
+        return ping_result
+    except subprocess.CalledProcessError as e:
+        error_message = f"Ping failed for {host}: {e}"
+        logging.error(error_message)
+        return error_message
 
 def dicom_echo(config):
     ae = AE(ae_title=config.get('Calling_AE_Title', 'PYNETDICOM'))
