@@ -5,9 +5,10 @@ This repository contains a collection of Python-based DICOM tools to perform var
 ## 🚀 Features
 
 - ✅ Query DICOM Modality Worklist (MWL) from a PACS server using C-FIND operation. - In Progress
-- ### ✅ Simple Study Count (`SimpleStudyCount.py`)
-
-This tool performs a simple DICOM query to retrieve study accession numbers and their corresponding Study Instance UIDs from a PACS server. The results are logged into a CSV file, providing a straightforward way to compile a list of studies within a specified date range.
+- ✅ Simple Study Count (`SimpleStudyCount.py`)
+- This tool performs a simple DICOM query to retrieve study accession numbers and their corresponding Study Instance UIDs from a PACS server. The results are logged into a CSV file, providing a straightforward way to compile a list of studies within a specified date range.
+- ✅ Discovery Tool (`discovery_tool.py`)
+This tool allws to perform various queries against a pacs and return results in various outputs.  The current code returns exams that are missing study descriptions.
 
 For detailed usage, see [Simple Study Count README](SimpleStudyCountREADME.md).
 - ❓ Transfer DICOM images to and from PACS servers using C-STORE and C-GET/C-MOVE operations. - TBD
@@ -25,9 +26,10 @@ For detailed usage, see [Simple Study Count README](SimpleStudyCountREADME.md).
 
 ## 🛠️ Tools
 
-1. **[🔎 DICOM Modality Worklist Query Tool (MWLQueryTool.py)](MWLQuerryToolREADME.md):** Query a DICOM Modality Worklist (MWL) from a PACS server using the C-FIND operation.
+1. **[📊 DICOM Modality Worklist Query Tool (MWLQueryTool.py)](MWLQuerryToolREADME.md):** Query a DICOM Modality Worklist (MWL) from a PACS server using the C-FIND operation.
 2. **[📊 Simple Study Count (SimpleStudyCount.py)](SimpleStudyCountREADME.md):** Perform a simple query to retrieve study accession numbers and corresponding Study Instance UIDs from a PACS server, logging the results to a CSV file.
-3. 📝 _More tools will be added in the future._
+3. **[📊 Discovery Tool (discovery_tool.py)](discovery_toolReadme.md):** Perform various queries against a pacs and return results in various outputs.
+4. 📝 _More tools will be added in the future._
 
 
 ## 🎯 Usage
