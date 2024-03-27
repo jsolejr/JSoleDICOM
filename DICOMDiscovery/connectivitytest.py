@@ -5,12 +5,11 @@ import subprocess
 import os
 import logging
 from pynetdicom import AE, evt
-from pydicom.uid import VerificationSOPClassUID
-from pynetdicom import AE
 from pynetdicom.sop_class import VerificationSOPClass
 import sys
-print(sys.executable)
 
+# Print the path of the current Python interpreter
+print(sys.executable)
 
 # Configure logging for the script
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -107,7 +106,7 @@ def close_application():
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("PACS Connectivity Test")
-    root.geometry("400x200")  # Set the size of the dialog box here (width x height)
+    root.geometry("400x200") # Set the size of the dialog box here (width x height)
 
     # Test Source PACS button
     tk.Button(root, text="Test Source PACS", command=test_source_pacs).pack(fill=tk.X, padx=10, pady=5)
