@@ -3,17 +3,59 @@ import tkinter as tk
 from tkinter import messagebox
 import subprocess
 import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def load_config():
+    config = {
+        'Calling_AE_Title': '',
+        'Called_AE_Title_for_Source_PACS': '',
+        'IP_Hostname_for_Source_PACS': '',
+        'Port_for_Source_PACS': '',
+        'Called_AE_Title_for_Destination_PACS': '',
+        'IP_Hostname_for_Destination_PACS': '',
+        'Port_for_Destination_PACS': ''
+    }
+    
+    # Log default config values
+    for key in config:
+        logging.debug(f"Default {key}: {config[key]}")
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, 'config.txt')
+    try:
+        with open(config_path, "r") as file:
+            for line in file:
+                parts = line.strip().split("=", 1)
+                if len(parts) == 2:
+                    key, value = parts
+                    config[key] = value
+                    logging.debug(f"Loaded {key}: {value}")
+    except FileNotFoundError:
+        logging.error("Configuration file not found.")
+        messagebox.showerror("Error", "Configuration file not found.")
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        messagebox.showerror("Error", str(e))
+
+    return config
 
 # Function to perform a ping test
 def ping(host):
-    # Use '-n' instead of '-c' for Windows systems (use -c on unix systems)
     count_flag = '-n' if os.name == 'nt' else '-c'
     count = '4'
     try:
+        logging.debug(f"Executing ping on host: {host}")
         response = subprocess.run(["ping", count_flag, count, host], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        logging.debug(f"Ping response: {response.stdout}")
+        logging.error(f"Ping error: {response.stderr}")
         return response.stdout + "\n" + response.stderr
     except subprocess.CalledProcessError as e:
+        logging.error(f"Ping failed: {e}")
         return f"Ping failed: {e}"
+
 
 # Function to perform a DICOM Echo (C-ECHO) test using the echoscu command from DCMTK tools
 def dicom_echo(aet, host, port):
