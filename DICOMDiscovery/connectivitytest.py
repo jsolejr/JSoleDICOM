@@ -34,18 +34,16 @@ def load_config():
 
     return config
 
-def ping(host):
-    # Use '-n' instead of '-c' for Windows systems (use -c on unix systems)
-    count_flag = '-n' if os.name == 'nt' else '-c'
-    count = '4'
-    logging.debug(f"Pinging host: {host}")  # Moved up for better logic flow
-    
+def test_ping(ip_address):
+    # Ping the provided IP address.
     try:
-        response = subprocess.run(["ping", count_flag, count, host], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        # Combine stdout and stderr for comprehensive output
+        response = subprocess.run(["ping", "-n" if os.name == 'nt' else "-c", "4", ip_address], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         ping_result = response.stdout + "\n" + response.stderr
-        logging.info(f"Ping result for {host}:\n{ping_result}")
-        return ping_result
+        logging.info(f"Ping result for {ip_address}:\n{ping_result}")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Ping failed for {ip_address}: {e}")
+        ping_result = f"Ping failed for {ip_address}: {e}"
+    return ping_result
     except subprocess.CalledProcessError as e:
         error_message = f"Ping failed for {host}: {e}"
         logging.error(error_message)
@@ -66,16 +64,21 @@ def dicom_echo(config):
         return "DICOM Echo Failed: Association not established"
 
 def test_source_pacs():
-    messagebox.showinfo("Running Tests", "The tests are now running. Please wait...")
     config = load_config()
     if config:
+        source_pacs_ip = config.get('IP/Hostname_for_Source_PACS')
+        ping_result = test_ping(source_pacs_ip)
+        messagebox.showinfo("Ping Source PACS", f"Ping Result:\n{ping_result}")
         echo_result = dicom_echo(config)
         messagebox.showinfo("Test Source PACS", f"DICOM Echo Result:\n{echo_result}")
 
+
 def test_destination_pacs():
-    messagebox.showinfo("Running Tests", "The tests are now running. Please wait...")
     config = load_config()
     if config:
+        destination_pacs_ip = config.get('IP/Hostname_for_Destination_PACS')
+        ping_result = test_ping(destination_pacs_ip)
+        messagebox.showinfo("Ping Destination PACS", f"Ping Result:\n{ping_result}")
         echo_result = dicom_echo(config)
         messagebox.showinfo("Test Destination PACS", f"DICOM Echo Result:\n{echo_result}")
 
