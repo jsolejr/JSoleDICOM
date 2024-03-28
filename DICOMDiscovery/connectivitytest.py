@@ -49,14 +49,21 @@ def dicom_echo(config):
     ae = AE(ae_title=config.get('Calling_AE_Title', 'PYNETDICOM'))
     ae.add_requested_context(VerificationSOPClass)
 
-    assoc = ae.associate(config.get('IP_Hostname_for_Source_PACS', ''),
-                         int(config.get('Port_for_Source_PACS', '0')),
-                         ae_title=config.get('Called_AE_Title_for_Source_PACS', 'ANY-SCP'))
+    ip = config.get('IP_Hostname_for_Source_PACS', '')
+    port = int(config.get('Port_for_Source_PACS', '0'))
+    ae_title = config.get('Called_AE_Title_for_Source_PACS', 'ANY-SCP')
+
+    logging.info(f"Attempting DICOM Echo: IP={ip}, Port={port}, AE Title={ae_title}")
+    assoc = ae.associate(ip, port, ae_title=ae_title)
+
     if assoc.is_established:
+        logging.info("DICOM Association established successfully")
         status = assoc.send_c_echo()
         assoc.release()
+        logging.info("DICOM Association released")
         return "DICOM Echo Succeeded" if status and status.Status == 0x0000 else "DICOM Echo Failed"
     else:
+        logging.error("DICOM Association failed")
         return "DICOM Echo Failed: Association not established"
 
 def test_source_pacs():
