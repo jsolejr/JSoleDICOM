@@ -44,10 +44,6 @@ def test_ping(ip_address):
         logging.error(f"Ping failed for {ip_address}: {e}")
         ping_result = f"Ping failed for {ip_address}: {e}"
     return ping_result
-    except subprocess.CalledProcessError as e:
-        error_message = f"Ping failed for {host}: {e}"
-        logging.error(error_message)
-        return error_message
 
 def dicom_echo(config):
     ae = AE(ae_title=config.get('Calling_AE_Title', 'PYNETDICOM'))
@@ -71,7 +67,6 @@ def test_source_pacs():
         messagebox.showinfo("Ping Source PACS", f"Ping Result:\n{ping_result}")
         echo_result = dicom_echo(config)
         messagebox.showinfo("Test Source PACS", f"DICOM Echo Result:\n{echo_result}")
-
 
 def test_destination_pacs():
     config = load_config()
