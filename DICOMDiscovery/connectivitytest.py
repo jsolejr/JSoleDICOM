@@ -49,7 +49,12 @@ def dicom_echo(config):
     ae = AE(ae_title=config.get('Calling_AE_Title', 'PYNETDICOM'))
     ae.add_requested_context(VerificationSOPClass)
 
-    ip = config.get('IP_Hostname_for_Source_PACS', '')
+    # Ensure the IP address is being retrieved correctly from the configuration
+    ip = config.get('IP/Hostname_for_Source_PACS', '')
+    if not ip:
+        logging.error("No IP address found for Source PACS in the configuration.")
+        return "DICOM Echo Failed: No IP address found for Source PACS"
+
     port = int(config.get('Port_for_Source_PACS', '0'))
     ae_title = config.get('Called_AE_Title_for_Source_PACS', 'ANY-SCP')
 
